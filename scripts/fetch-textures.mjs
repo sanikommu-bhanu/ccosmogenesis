@@ -22,11 +22,12 @@
  */
 
 import { createWriteStream } from 'node:fs'
-import { mkdir, stat, unlink, readFile } from 'node:fs/promises'
+import { mkdir, stat, unlink, readFile, rename } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pipeline } from 'node:stream/promises'
 import { Readable } from 'node:stream'
+import sharp from 'sharp'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -126,6 +127,47 @@ async function download(url, dest) {
   return (await stat(dest)).size
 }
 
+/**
+ * Downscales a texture in place if it is wider than the manifest asks for.
+ *
+ * This step exists because Wikimedia does not honour arbitrary thumbnail widths:
+ * the API reports `thumbwidth: 2048` but hands back a URL for the nearest cached
+ * bucket, which is 3840px for these files. Requesting the exact width on demand is
+ * what trips their robot policy. So we take whatever they cache and resize here,
+ * which is deterministic, costs them nothing, and actually delivers the resolution
+ * budget the project committed to.
+ *
+ * Returns the number of bytes saved, or 0 if the file was already small enough.
+ */
+async function fitToBudget(dest, targetWidth) {
+  const before = (await stat(dest)).size
+  const image = sharp(dest, { limitInputPixels: 512 * 1024 * 1024 })
+  const meta = await image.metadata()
+
+  if (!meta.width || meta.width <= targetWidth) return 0
+
+  const isPng = dest.toLowerCase().endsWith('.png')
+  const temp = `${dest}.resizing`
+
+  let pipelineOut = sharp(dest, { limitInputPixels: 512 * 1024 * 1024 }).resize({
+    width: targetWidth,
+    // Equirectangular maps must keep their 2:1 ratio exactly or the poles shear.
+    fit: 'fill',
+    height: Math.round((targetWidth * meta.height) / meta.width),
+    kernel: 'lanczos3',
+  })
+
+  pipelineOut = isPng
+    ? // Saturn's rings need their alpha channel preserved; never flatten to JPEG.
+      pipelineOut.png({ compressionLevel: 9, palette: false })
+    : pipelineOut.jpeg({ quality: 88, mozjpeg: true, chromaSubsampling: '4:4:4' })
+
+  await pipelineOut.toFile(temp)
+  await rename(temp, dest)
+
+  return before - (await stat(dest)).size
+}
+
 async function main() {
   const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'))
   const assets = manifest.assets
@@ -148,11 +190,7 @@ async function main() {
     }
   }
 
-  if (skipped) console.log(`  ${skipped} already present, skipping\n`)
-  if (!pending.length) {
-    console.log(`  nothing to do - ${bytes(total)} on disk\n`)
-    return
-  }
+  if (skipped) console.log(`  ${skipped} already present, skipping downloads`)
 
   // Resolve CDN URLs, grouped by requested width (one API round-trip per group).
   const byWidth = new Map()
@@ -172,7 +210,6 @@ async function main() {
       console.log(`failed: ${err.message}`)
     }
   }
-  console.log()
 
   let downloaded = 0
   const failures = []
@@ -216,8 +253,37 @@ async function main() {
     await sleep(DELAY_MS)
   }
 
+  // --- Fit every asset to its budgeted resolution ---
+  // Runs over pre-existing files too, so a library fetched before this step was
+  // added self-corrects on the next run rather than staying oversized forever.
+  console.log()
+  let saved = 0
+  let resized = 0
+  for (const asset of assets) {
+    const dest = join(OUT_DIR, asset.out)
+    if (!(await exists(dest))) continue
+    try {
+      const delta = await fitToBudget(dest, asset.width)
+      if (delta > 0) {
+        resized++
+        saved += delta
+        console.log(`  resize  ${asset.out.padEnd(24)} -> ${asset.width}px  (-${bytes(delta)})`)
+      }
+    } catch (err) {
+      console.log(`  resize  ${asset.out.padEnd(24)} FAILED  ${err.message.slice(0, 60)}`)
+    }
+  }
+
+  // Recompute from disk: the running tally was taken before resizing.
+  total = 0
+  for (const asset of assets) {
+    const dest = join(OUT_DIR, asset.out)
+    if (await exists(dest)) total += (await stat(dest)).size
+  }
+
   console.log(
-    `\n  ${downloaded} downloaded, ${skipped} already present, ${failures.length} failed - ${bytes(total)} total\n`,
+    `\n  ${downloaded} downloaded, ${skipped} already present, ${resized} resized` +
+      `${saved > 0 ? ` (-${bytes(saved)})` : ''}, ${failures.length} failed - ${bytes(total)} on disk\n`,
   )
 
   if (failures.length) {

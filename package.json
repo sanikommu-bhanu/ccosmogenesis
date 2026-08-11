@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "textures": "node scripts/fetch-textures.mjs",
     "textures:force": "node scripts/fetch-textures.mjs --force",
-    "verify": "node scripts/verify-timeline.mjs",
+    "verify": "node scripts/verify-timeline.mjs && node scripts/verify-textures.mjs",
+    "verify:timeline": "node scripts/verify-timeline.mjs",
+    "verify:textures": "node scripts/verify-textures.mjs",
     "postinstall": "node scripts/fetch-textures.mjs || echo \"  textures incomplete - run 'npm run textures' to retry\""
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
