@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useScrollTimeline, SCROLL_HEIGHT_VH } from './hooks/useScrollTimeline'
 import { useUniverseStore } from './store/useUniverseStore'
 import { detectQuality } from './lib/quality'
+import { Stage } from './scenes/Stage'
 import { ScrollProbe } from './components/dev/ScrollProbe'
 
 export default function App() {
@@ -21,15 +22,16 @@ export default function App() {
 
   return (
     <>
+      <Stage />
+
       {/*
         The scroll driver. It has no content — it exists purely to give the document
-        a height, which is the film's timeline. Everything visible is position:fixed
-        on top of it. This is more robust than ScrollTrigger's pin under smooth
-        scrolling, which has to fight Lenis for transform ownership.
+        a height, which is the film's timeline. Everything visible is fixed on top
+        of it.
       */}
       <div aria-hidden style={{ height: `${SCROLL_HEIGHT_VH}vh` }} />
 
-      <ScrollProbe />
+      {import.meta.env.DEV && <ScrollProbe />}
     </>
   )
 }

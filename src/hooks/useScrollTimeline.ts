@@ -16,7 +16,7 @@ import { useEffect } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
-import { chapterAt, SCROLL_SCREENS } from '../config/chapters'
+import { chapterAt, CHAPTER_RANGES, SCROLL_SCREENS } from '../config/chapters'
 import { PLANET_SEGMENTS, planetSegmentAt } from '../config/planets'
 import { localProgress } from '../config/chapters'
 import { scrollState, useUniverseStore } from '../store/useUniverseStore'
@@ -139,6 +139,30 @@ export function useScrollTimeline(enabled: boolean) {
     window.addEventListener('resize', onResize)
 
     ScrollTrigger.refresh()
+
+    // Deep link to a moment in the film: `?t=0.62` opens there, and `?c=galaxy`
+    // opens at a chapter's midpoint. Handy for sharing a specific shot, and it's
+    // what makes the film reviewable without scrubbing to the same place by hand.
+    const params = new URLSearchParams(window.location.search)
+    const tParam = params.get('t')
+    const cParam = params.get('c')
+    let jumpTo: number | null = null
+
+    if (tParam !== null) {
+      const value = Number.parseFloat(tParam)
+      if (Number.isFinite(value)) jumpTo = clamp(value)
+    } else if (cParam !== null) {
+      const range = CHAPTER_RANGES.find((r) => r.chapter.id === cParam)
+      if (range) jumpTo = (range.start + range.end) / 2
+    }
+
+    if (jumpTo !== null) {
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      const top = jumpTo * max
+      window.scrollTo(0, top)
+      lenis.scrollTo(top, { immediate: true, force: true })
+      ScrollTrigger.update()
+    }
 
     return () => {
       window.removeEventListener('pointermove', onPointer)
