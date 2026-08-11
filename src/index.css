@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens.
+ *
+ * The palette is deliberately tiny: near-black grounds, one warm bone-white for
+ * type, and the chapter accent which is driven from JS (the grade travels, so the
+ * accent can't be a fixed token). Everything else is opacity on bone.
+ */
+@theme {
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --color-void: #000000;
+  --color-ground: #04040a;
+  --color-bone: #f4efe6;
+  --color-bone-dim: #a9a49a;
+  --color-accent: #ffb703;
+
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-ui: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-whip: cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: var(--color-void);
+    /* Lenis drives scrolling; native smooth-scroll would fight it. */
+    scroll-behavior: auto;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-void);
+    color: var(--color-bone);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* The film supplies its own cursor; see components/Cursor.tsx. */
+  @media (hover: hover) and (pointer: fine) {
+    body.has-custom-cursor,
+    body.has-custom-cursor * {
+      cursor: none;
+    }
+  }
+
+  canvas {
+    display: block;
+    touch-action: pan-y;
+  }
+
+  ::selection {
+    background: var(--color-bone);
+    color: var(--color-void);
+  }
+
+  /* Lenis needs these to own the scroll container correctly. */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * HUD typographic scale. Telemetry is small, wide-tracked and uppercase — the
+   * tracking is what sells "instrument readout" more than the font choice does.
+   */
+  .hud-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-bone) 42%, transparent);
+  }
+
+  .hud-value {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--color-bone) 88%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hud-rule {
+    height: 1px;
+    background: color-mix(in srgb, var(--color-bone) 16%, transparent);
+  }
+
+  .chapter-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+    line-height: 0.94;
+  }
+}
+
+@layer utilities {
+  /*
+   * Per-character reveal: text resolves out of blur into focus rather than fading.
+   * `--i` is set per span in JS to stagger; `--reveal` is the 0→1 driver.
+   */
+  .char {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform, filter, opacity;
+  }
+
+  .text-balance-tight {
+    text-wrap: balance;
+  }
+
+  /* Keeps a scrollable region from bubbling its scroll into Lenis. */
+  .isolate-scroll {
+    overscroll-behavior: contain;
+  }
+}

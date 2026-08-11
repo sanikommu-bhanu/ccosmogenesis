@@ -1,0 +1,247 @@
+{
+  "$comment": "Single source of truth for every bitmap in the project. Consumed by scripts/fetch-textures.mjs at asset-fetch time and by src/config/planets.ts at runtime. Resolutions follow the agreed budget: 4K for hero bodies (Earth, Sun, Jupiter, Saturn, skybox), 2K for everything else, 1K/512 for moons that never fill more than a few hundred pixels.",
+  "sources": {
+    "commons": {
+      "name": "Wikimedia Commons",
+      "endpoint": "https://commons.wikimedia.org/wiki/Special:FilePath/",
+      "note": "Special:FilePath honours ?width= and transcodes TIFF to JPEG, so we pull exactly the resolution we ship rather than downscaling locally."
+    }
+  },
+  "assets": [
+    {
+      "out": "earth/day.jpg",
+      "file": "Solarsystemscope texture 8k earth daymap.jpg",
+      "width": 4096,
+      "body": "Earth",
+      "map": "albedo / daymap",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Visible Earth — Blue Marble Next Generation"
+    },
+    {
+      "out": "earth/night.jpg",
+      "file": "Solarsystemscope texture 8k earth nightmap.jpg",
+      "width": 4096,
+      "body": "Earth",
+      "map": "night lights / emissive",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Earth Observatory — Black Marble / VIIRS DNB"
+    },
+    {
+      "out": "earth/clouds.jpg",
+      "file": "Solarsystemscope texture 8k earth clouds.jpg",
+      "width": 2048,
+      "body": "Earth",
+      "map": "cloud layer (luminance used as alpha)",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Visible Earth — MODIS cloud composite"
+    },
+    {
+      "out": "earth/normal.jpg",
+      "file": "Solarsystemscope texture 8k earth normal map.tif",
+      "width": 2048,
+      "body": "Earth",
+      "map": "tangent-space normal",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA/USGS SRTM + GEBCO bathymetry",
+      "note": "Source is TIFF; Commons transcodes to JPEG on request. JPEG chroma subsampling is acceptable here because the map is used at low normalScale for coastline/relief hinting, not for tight specular detail."
+    },
+    {
+      "out": "earth/specular.jpg",
+      "file": "Solarsystemscope texture 8k earth specular map.tif",
+      "width": 2048,
+      "body": "Earth",
+      "map": "specular / ocean mask (inverted to roughness at runtime)",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Visible Earth land/water mask"
+    },
+
+    {
+      "out": "sun/surface.jpg",
+      "file": "Solarsystemscope texture 8k sun.jpg",
+      "width": 4096,
+      "body": "Sun",
+      "map": "photosphere / emissive base",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA SDO imagery"
+    },
+
+    {
+      "out": "mercury/albedo.jpg",
+      "file": "Solarsystemscope texture 8k mercury.jpg",
+      "width": 2048,
+      "body": "Mercury",
+      "map": "albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA MESSENGER MDIS global mosaic"
+    },
+    {
+      "out": "venus/surface.jpg",
+      "file": "Solarsystemscope texture 8k venus surface.jpg",
+      "width": 2048,
+      "body": "Venus",
+      "map": "surface albedo (radar-derived)",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Magellan radar mosaic"
+    },
+    {
+      "out": "venus/atmosphere.jpg",
+      "file": "Solarsystemscope texture 4k venus atmosphere.jpg",
+      "width": 2048,
+      "body": "Venus",
+      "map": "cloud deck (the only thing actually visible from space)",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Mariner 10 / Venus Express UV imagery"
+    },
+    {
+      "out": "mars/albedo.jpg",
+      "file": "Solarsystemscope texture 8k mars.jpg",
+      "width": 2048,
+      "body": "Mars",
+      "map": "albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA MGS MOC / Viking colour mosaic"
+    },
+    {
+      "out": "jupiter/albedo.jpg",
+      "file": "Solarsystemscope texture 8k jupiter.jpg",
+      "width": 4096,
+      "body": "Jupiter",
+      "map": "cloud bands albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Cassini / Juno imagery"
+    },
+    {
+      "out": "saturn/albedo.jpg",
+      "file": "Solarsystemscope texture 8k saturn.jpg",
+      "width": 4096,
+      "body": "Saturn",
+      "map": "cloud bands albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Cassini imagery"
+    },
+    {
+      "out": "saturn/ring-alpha.png",
+      "file": "Solarsystemscope texture 8k saturn ring alpha.png",
+      "width": 2048,
+      "body": "Saturn",
+      "map": "ring colour + alpha (radial strip)",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Cassini ring occultation profiles",
+      "note": "Must stay PNG — the alpha channel encodes the Cassini Division and the C-ring gaps."
+    },
+    {
+      "out": "uranus/albedo.jpg",
+      "file": "Solarsystemscope texture 2k uranus.jpg",
+      "width": 2048,
+      "body": "Uranus",
+      "map": "albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Voyager 2 imagery",
+      "note": "2K is the native maximum; Uranus is a near-featureless disc so there is nothing higher to resolve."
+    },
+    {
+      "out": "neptune/albedo.jpg",
+      "file": "Solarsystemscope texture 2k neptune.jpg",
+      "width": 2048,
+      "body": "Neptune",
+      "map": "albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA Voyager 2 imagery",
+      "note": "2K is the native maximum."
+    },
+
+    {
+      "out": "moons/moon.jpg",
+      "file": "Solarsystemscope texture 8k moon.jpg",
+      "width": 2048,
+      "body": "Moon (Earth I)",
+      "map": "albedo",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "NASA LRO LROC WAC global mosaic"
+    },
+    {
+      "out": "moons/io.jpg",
+      "file": "Io from Galileo and Voyager missions.jpg",
+      "width": 1024,
+      "body": "Io (Jupiter I)",
+      "map": "albedo",
+      "author": "USGS Astrogeology Science Center / NASA",
+      "license": "Public domain (NASA/USGS)",
+      "derivedFrom": "Galileo SSI + Voyager global mosaic"
+    },
+    {
+      "out": "moons/callisto.jpg",
+      "file": "Callisto USGS global small.jpg",
+      "width": 1024,
+      "body": "Callisto (Jupiter IV)",
+      "map": "albedo",
+      "author": "USGS Astrogeology Science Center / NASA",
+      "license": "Public domain (NASA/USGS)",
+      "derivedFrom": "Voyager + Galileo SSI global mosaic"
+    },
+    {
+      "out": "moons/titan.jpg",
+      "file": "2009 Map of Titan cylindrical projection.jpg",
+      "width": 1024,
+      "body": "Titan (Saturn VI)",
+      "map": "albedo (surface through the haze)",
+      "author": "NASA / JPL / Space Science Institute",
+      "license": "Public domain (NASA)",
+      "derivedFrom": "Cassini ISS global mosaic, 2009"
+    },
+    {
+      "out": "moons/phobos.jpg",
+      "file": "USGS-Phobos-MarsMoon-Map.png",
+      "width": 512,
+      "body": "Phobos (Mars I)",
+      "map": "albedo",
+      "author": "USGS Astrogeology Science Center / NASA",
+      "license": "Public domain (NASA/USGS)",
+      "derivedFrom": "Mars Express HRSC / Viking control mosaic"
+    },
+
+    {
+      "out": "sky/milkyway.jpg",
+      "file": "Solarsystemscope texture 8k stars milky way.jpg",
+      "width": 4096,
+      "body": "Celestial sphere",
+      "map": "equirectangular starfield + galactic plane",
+      "author": "INOVE / Solar System Scope",
+      "license": "CC BY 4.0",
+      "derivedFrom": "ESO Milky Way panorama / Gaia + Tycho star catalogue"
+    }
+  ],
+  "procedural": [
+    {
+      "body": "Europa (Jupiter II)",
+      "reason": "No clean equirectangular global mosaic is reachable from a free, scriptable source.",
+      "approach": "fBm-driven lineae/crack network over a high-albedo ice base. Bond albedo 0.68 and the measured pale yellow-white ice colour are matched to published values."
+    },
+    {
+      "body": "Ganymede (Jupiter III)",
+      "reason": "Same as Europa.",
+      "approach": "Two-tone dark cratered terrain vs. bright grooved sulci, generated with domain-warped noise. Albedo 0.43."
+    },
+    {
+      "body": "Deimos (Mars II)",
+      "reason": "Same as Europa.",
+      "approach": "Regolith-smoothed crater field on a very dark carbonaceous base. Albedo 0.068. Renders under ~4 px at its closest framing."
+    }
+  ]
+}
