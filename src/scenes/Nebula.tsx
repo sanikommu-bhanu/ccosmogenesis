@@ -59,7 +59,7 @@ export function Nebula() {
         seed: random() * 100,
         colorA: new Color(a).convertSRGBToLinear(),
         colorB: new Color(b).convertSRGBToLinear(),
-        opacity: 0.16 + random() * 0.24,
+        opacity: 0.34 + random() * 0.4,
       }
     })
   }, [quality])

@@ -18,11 +18,16 @@ import { Nebula } from './Nebula'
 import { Post } from './Post'
 import { Starfield } from './Starfield'
 import { FrameClock } from './FrameClock'
+import { DevBridge } from './DevBridge'
 import { BUDGET, useUniverseStore } from '../store/useUniverseStore'
 
 export function Stage() {
   const quality = useUniverseStore((s) => s.quality)
   const budget = BUDGET[quality]
+
+  const usePost =
+    typeof window === 'undefined' ||
+    new URLSearchParams(window.location.search).get('post') !== '0'
 
   return (
     <div className="fixed inset-0 z-0">
@@ -47,6 +52,7 @@ export function Stage() {
       >
         <FrameClock />
         <CameraRig />
+        {import.meta.env.DEV && <DevBridge />}
 
         <Suspense fallback={null}>
           <Starfield />
@@ -55,7 +61,10 @@ export function Stage() {
           <Preload all />
         </Suspense>
 
-        <Post />
+        {/* `?post=0` renders the raw scene with no composer — useful for judging
+            how much of the look is grading versus geometry, and for isolating
+            post-processing when debugging. */}
+        {usePost && <Post />}
         <AdaptiveDpr pixelated={false} />
       </Canvas>
     </div>

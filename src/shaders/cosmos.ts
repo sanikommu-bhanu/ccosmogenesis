@@ -133,19 +133,39 @@ void main() {
   // Size and opacity
   // ---------------------------------------------------------------------
   float size = aSize * uSize;
-  // Bigger and brighter at the instant of the burst, settling as it expands.
-  size *= 1.0 + 2.6 * uBurst * (1.0 - burst);
+  // Bigger at the instant of the burst, settling as it expands.
+  size *= 1.0 + 1.8 * uBurst * (1.0 - burst);
   size *= mix(1.0, 0.62, settle);
 
-  gl_PointSize = size * uPixelRatio * (300.0 / max(viewDist, 0.6));
+  // The projection constant is the single strongest control on how the whole field
+  // reads. Too high and 200k sprites overlap into a solid sheet that no amount of
+  // tone mapping can recover; this is tuned so a typical particle covers a few
+  // pixels and the density comes from *count*, not from size.
+  gl_PointSize = clamp(size * uPixelRatio * (55.0 / max(viewDist, 0.6)), 0.5, 64.0);
 
-  float alpha = 1.0;
+  // Additive blending accumulates, so per-particle contribution has to stay small —
+  // brightness is meant to come from thousands of particles overlapping, which is
+  // what produces real depth in the dense regions instead of a flat clipped mass.
+  float alpha = 0.16;
   alpha *= smoothstep(0.0, 0.06, uBirth + uBurst);       // fade up out of black
   alpha *= 1.0 - smoothstep(0.55, 1.0, uFade);           // fade out toward the Sun
-  alpha *= mix(0.55, 1.0, settle);
+  alpha *= mix(1.0, 1.5, settle);                        // stars read crisper than gas
+
+  // During the cooling chapter the particles *are* diffuse gas, not stars. Dimming
+  // them here stops the frame becoming a wall of uniform dots and lets the nebula
+  // volumetrics carry the chapter, which is the right reading of the physics too:
+  // this is the era before anything had condensed into a star.
+  alpha *= mix(1.0, 0.4, cool * (1.0 - settle));
+
+  // The one moment the frame is *meant* to clip: the instant of the Big Bang.
+  // A short, sharp spike that decays fast, rather than a chapter-long white-out.
+  float flash = exp(-uBurst * 26.0) * step(0.001, uBurst);
+  alpha *= 1.0 + flash * 9.0;
+
   // Distance falloff stops the far side of the galaxy from turning into a solid
-  // white sheet under additive blending.
-  alpha *= smoothstep(340.0, 40.0, viewDist);
+  // sheet under additive blending. (Note the reversed edges: smoothstep with
+  // edge0 > edge1 is undefined in GLSL, so this is written the safe way round.)
+  alpha *= 1.0 - smoothstep(40.0, 340.0, viewDist);
 
   vAlpha = alpha;
   // Fast scrubbing stretches points into streaks; see the fragment shader.
@@ -292,9 +312,14 @@ void main() {
   // Scintillation, at a different rate per star.
   float twinkle = 0.72 + 0.28 * sin(uTime * (0.6 + aTwinkle * 2.4) + aTwinkle * 62.8);
 
-  gl_PointSize = aSize * uSize * uPixelRatio * (260.0 / max(viewDist, 1.0)) * (1.0 + uStretch * 0.5);
+  gl_PointSize = clamp(
+    aSize * uSize * uPixelRatio * (85.0 / max(viewDist, 1.0)) * (1.0 + uStretch * 0.5),
+    0.5,
+    40.0
+  );
 
-  vAlpha = uOpacity * twinkle * smoothstep(1400.0, 120.0, viewDist);
+  // Reversed edges: GLSL smoothstep is undefined when edge0 > edge1.
+  vAlpha = uOpacity * twinkle * (1.0 - smoothstep(120.0, 1400.0, viewDist)) * 0.55;
   vStretch = uStretch;
 
   gl_Position = projectionMatrix * mvPosition;

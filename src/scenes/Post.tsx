@@ -77,7 +77,9 @@ export function Post() {
 
     if (chromaRef.current) {
       // Aberration is a *reaction*: the chapter sets a floor, speed adds to it.
-      const amount = (grade.chromatic + speed * 3.2) * 0.001
+      // Kept low deliberately — radialModulation concentrates the whole offset at
+      // the frame edges, so values that look modest here read very strongly there.
+      const amount = (grade.chromatic + speed * 1.1) * 0.0006
       chromaOffset.set(amount, amount * 0.7)
       chromaRef.current.offset = chromaOffset
       // Concentrate the fringing toward the frame edges, the way a real lens does,

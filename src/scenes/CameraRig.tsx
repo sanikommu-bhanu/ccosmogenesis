@@ -59,12 +59,15 @@ function buildKeys(): CamKey[] {
     { at: at('expansion', 1), pos: [-5, -2.5, -10], look: [-6, -1, -26], fov: 46, ease: EASE.dolly, drift: 1.0 },
 
     // --- 3. Galaxy: pull back and rise to an oblique reveal of the whole spiral ---
-    { at: at('galaxy', 0.55), pos: [8, 30, 84], look: [0, 0, 0], fov: 40, ease: EASE.reveal, drift: 0.7 },
-    { at: at('galaxy', 1), pos: [26, 34, 88], look: [0, 0, 0], fov: 38, ease: EASE.dolly, drift: 0.6 },
+    // Distance is set so the 62-unit disc sits inside the frame with air around it.
+    // The reveal only lands if the galaxy is small in frame — crowding the arms
+    // against the edges reads as being lost inside it rather than seeing it whole.
+    { at: at('galaxy', 0.55), pos: [12, 46, 124], look: [0, 0, 0], fov: 40, ease: EASE.reveal, drift: 0.7 },
+    { at: at('galaxy', 1), pos: [40, 55, 132], look: [0, 0, 0], fov: 38, ease: EASE.dolly, drift: 0.6 },
 
     // --- 4. Milky Way: descend toward the disc and pick a spiral arm ---
-    { at: at('milkyway', 0.5), pos: [46, 13, 60], look: [12, 0, 8], fov: 42, ease: EASE.dolly, drift: 0.8 },
-    { at: at('milkyway', 1), pos: [36, 4.5, 30], look: [4, 0, 0], fov: 46, ease: EASE.dolly, drift: 1.0 },
+    { at: at('milkyway', 0.5), pos: [70, 22, 96], look: [14, 0, 10], fov: 42, ease: EASE.dolly, drift: 0.8 },
+    { at: at('milkyway', 1), pos: [48, 7, 46], look: [6, 0, 2], fov: 46, ease: EASE.dolly, drift: 1.0 },
 
     // --- 5. Flythrough: the hyperspace run in toward one star ---
     { at: at('flythrough', 0.55), pos: [12, 2, 14], look: [0, 0, 0], fov: 68, ease: EASE.hyper, drift: 1.6 },
