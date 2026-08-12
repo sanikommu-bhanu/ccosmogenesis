@@ -60,9 +60,9 @@ export function Post() {
     const { a, b, t } = gradeKeyframes(p)
     lerpGrade(grade, a, b, t)
 
-    // Scroll velocity feeds the "camera under stress" effects. Held shots settle
-    // to the chapter's baseline; fast scrubbing pushes them hard.
-    const speed = clamp(scrollState.speed)
+    // Lens artefacts respond to how fast the *camera* is moving, with a smaller
+    // contribution from raw scroll speed so scrubbing still feels connected.
+    const speed = clamp(scrollState.cameraSpeed * 0.8 + scrollState.speed * 0.35)
 
     gradeRef.current?.setGrade(grade.tint, grade.lift, grade.saturation, grade.exposure)
 

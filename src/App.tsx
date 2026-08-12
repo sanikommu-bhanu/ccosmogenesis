@@ -3,7 +3,9 @@ import { useScrollTimeline, SCROLL_HEIGHT_VH } from './hooks/useScrollTimeline'
 import { useUniverseStore } from './store/useUniverseStore'
 import { detectQuality } from './lib/quality'
 import { Stage } from './scenes/Stage'
+import { SceneBoundary } from './components/SceneBoundary'
 import { ScrollProbe } from './components/dev/ScrollProbe'
+import { DEBUG } from './lib/debug'
 
 export default function App() {
   const setQuality = useUniverseStore((s) => s.setQuality)
@@ -22,7 +24,9 @@ export default function App() {
 
   return (
     <>
-      <Stage />
+      <SceneBoundary>
+        <Stage />
+      </SceneBoundary>
 
       {/*
         The scroll driver. It has no content — it exists purely to give the document
@@ -31,7 +35,9 @@ export default function App() {
       */}
       <div aria-hidden style={{ height: `${SCROLL_HEIGHT_VH}vh` }} />
 
-      {import.meta.env.DEV && <ScrollProbe />}
+      {/* Engineering telemetry only — off unless explicitly requested via
+          ?debug=1 or VITE_DEBUG_HUD. Never part of the shipped experience. */}
+      {DEBUG && <ScrollProbe />}
     </>
   )
 }

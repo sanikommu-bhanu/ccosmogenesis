@@ -28,6 +28,18 @@ export interface ScrollState {
   velocity: number
   /** Smoothed |velocity|, 0 → 1, for effects that shouldn't flicker. */
   speed: number
+  /**
+   * Smoothed camera travel speed, 0 → 1, written by the camera rig.
+   * Distinct from `speed` on purpose: this is how fast the *camera* is moving
+   * through the world, which is what lens artefacts should respond to.
+   */
+  cameraSpeed: number
+  /**
+   * Where the camera sits on the current planet's orbital ring, in radians from the
+   * sunlit side. Lets fact callouts fire on the camera crossing the terminator
+   * rather than on a timer that only approximates it.
+   */
+  ringAngle: number
   /** Pointer in normalised device coords, -1 → 1. Drives parallax and the cursor. */
   pointerX: number
   pointerY: number
@@ -44,6 +56,8 @@ export const scrollState: ScrollState = {
   progress: 0,
   velocity: 0,
   speed: 0,
+  cameraSpeed: 0,
+  ringAngle: 0,
   pointerX: 0,
   pointerY: 0,
   time: 0,

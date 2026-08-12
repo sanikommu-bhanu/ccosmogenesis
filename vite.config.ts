@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+// @ts-expect-error - plain .mjs dev plugin, no types needed
+import { captureBridge } from './scripts/vite-plugin-capture.mjs'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), captureBridge()],
   build: {
     target: 'es2022',
     rollupOptions: {

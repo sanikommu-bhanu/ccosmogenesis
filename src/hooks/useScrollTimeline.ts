@@ -156,15 +156,41 @@ export function useScrollTimeline(enabled: boolean) {
       if (range) jumpTo = (range.start + range.end) / 2
     }
 
+    // Applying the jump once is not enough: at first-effect time the document is
+    // still settling (web fonts, the tall spacer's vh resolution), so
+    // `scrollHeight` is smaller than its final value and the jump lands short —
+    // roughly two thirds of the way to the intended position. Re-apply each frame
+    // until the measured height stops changing, then stop.
+    let deepLinkRaf = 0
     if (jumpTo !== null) {
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      const top = jumpTo * max
-      window.scrollTo(0, top)
-      lenis.scrollTo(top, { immediate: true, force: true })
-      ScrollTrigger.update()
+      const target = jumpTo
+      let lastMax = -1
+      let stableFrames = 0
+
+      const apply = () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight
+        if (max <= 0) {
+          deepLinkRaf = requestAnimationFrame(apply)
+          return
+        }
+
+        stableFrames = max === lastMax ? stableFrames + 1 : 0
+        lastMax = max
+
+        const top = target * max
+        window.scrollTo(0, top)
+        lenis.scrollTo(top, { immediate: true, force: true })
+        ScrollTrigger.update()
+
+        // Three consecutive frames at the same height means layout has settled.
+        if (stableFrames < 3) deepLinkRaf = requestAnimationFrame(apply)
+      }
+
+      deepLinkRaf = requestAnimationFrame(apply)
     }
 
     return () => {
+      cancelAnimationFrame(deepLinkRaf)
       window.removeEventListener('pointermove', onPointer)
       window.removeEventListener('resize', onResize)
       trigger.kill()

@@ -22,6 +22,7 @@ export type ChapterId =
   | 'flythrough'
   | 'sun'
   | 'planets'
+  | 'missions'
   | 'return'
 
 export interface Chapter {
@@ -51,9 +52,9 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 'singularity',
     index: 0,
-    title: 'Nothing',
-    kicker: 'T = 0',
-    line: 'In the beginning, there was nothing.',
+    title: 'Before Everything',
+    kicker: '13.8 billion years ago',
+    line: 'There is no “before”. Time itself starts here.',
     weight: 0.9,
     grade: {
       exposure: 0.85,
@@ -166,9 +167,9 @@ export const CHAPTERS: Chapter[] = [
   {
     id: 'flythrough',
     index: 5,
-    title: 'Approach',
+    title: 'The Cradle',
     kicker: 'Orion Arm — 26 000 ly from galactic centre',
-    line: 'Toward one unremarkable star.',
+    line: 'A cold cloud of gas collapses under its own weight.',
     weight: 1.0,
     grade: {
       exposure: 1.12,
@@ -194,11 +195,11 @@ export const CHAPTERS: Chapter[] = [
     line: 'Everything else is a rounding error.',
     weight: 1.15,
     grade: {
-      exposure: 1.0,
-      bloom: 1.7,
-      bloomThreshold: 0.28,
-      bloomSmoothing: 0.8,
-      chromatic: 0.7,
+      exposure: 0.92,
+      bloom: 1.0,
+      bloomThreshold: 0.62,
+      bloomSmoothing: 0.7,
+      chromatic: 0.5,
       vignette: 0.42,
       grain: 0.04,
       saturation: 1.12,
@@ -234,12 +235,38 @@ export const CHAPTERS: Chapter[] = [
     },
   },
   {
-    id: 'return',
+    id: 'missions',
     index: 8,
-    title: 'And here you are',
-    kicker: 'watching',
+    title: 'We Went Out',
+    kicker: '1957 → present',
+    line: 'Sixty-eight years ago, one of these worlds started sending things back.',
+    weight: 2.2,
+    grade: {
+      // Cooler and cleaner than the planets chapter: this is the archival, documentary
+      // register of the film. Low bloom and near-zero grain read as telemetry rather
+      // than as a photographed sky.
+      exposure: 1.02,
+      bloom: 0.62,
+      bloomThreshold: 0.66,
+      bloomSmoothing: 0.55,
+      chromatic: 0.3,
+      vignette: 0.52,
+      grain: 0.032,
+      saturation: 0.92,
+      tint: '#dce8ff',
+      lift: '#02040c',
+      focusDistance: 16,
+      bokeh: 1.6,
+      haze: '#01020a',
+    },
+  },
+  {
+    id: 'return',
+    index: 9,
+    title: 'This Is Our Home',
+    kicker: 'a small world around an ordinary star',
     line: 'And here you are, watching.',
-    weight: 1.6,
+    weight: 2.1,
     grade: {
       exposure: 0.9,
       bloom: 1.3,
@@ -256,6 +283,33 @@ export const CHAPTERS: Chapter[] = [
       haze: '#000000',
     },
   },
+]
+
+/**
+ * The navigation.
+ *
+ * Seven destinations, not nine chapters and not a site menu. Each one names a *place*
+ * the viewer can be, which is why the labels are nouns from the film rather than
+ * section headings. `anchor` is the chapter it jumps into and `local` is where inside
+ * that chapter to land — always slightly past the chapter's opening, so a jump arrives
+ * mid-shot with the scene already established rather than at a cold boundary.
+ */
+export interface Destination {
+  label: string
+  anchor: ChapterId
+  local: number
+  /** Mono sub-label: what you are actually looking at when you arrive. */
+  note: string
+}
+
+export const DESTINATIONS: Destination[] = [
+  { label: 'ORIGIN', anchor: 'singularity', local: 0, note: 'T = 0' },
+  { label: 'COSMOS', anchor: 'expansion', local: 0.35, note: 'first light' },
+  { label: 'GALAXIES', anchor: 'galaxy', local: 0.5, note: 'structure' },
+  { label: 'MILKY WAY', anchor: 'milkyway', local: 0.45, note: 'our galaxy' },
+  { label: 'SOLAR SYSTEM', anchor: 'sun', local: 0.4, note: 'one star' },
+  { label: 'WORLDS', anchor: 'planets', local: 0.06, note: 'eight planets' },
+  { label: 'MISSIONS', anchor: 'missions', local: 0.12, note: 'we went out' },
 ]
 
 export interface ChapterRange {
@@ -281,6 +335,12 @@ export const CHAPTER_RANGES: ChapterRange[] = (() => {
 export const CHAPTER_BY_ID = Object.fromEntries(
   CHAPTER_RANGES.map((r) => [r.chapter.id, r]),
 ) as Record<ChapterId, ChapterRange>
+
+/** Global progress for a position inside a named chapter. Inverse of `localProgress`. */
+export function progressOf(id: ChapterId, local: number): number {
+  const { start, end } = CHAPTER_BY_ID[id]
+  return start + (end - start) * Math.min(1, Math.max(0, local))
+}
 
 /**
  * Total scroll height as a multiple of viewport height. The film is long on purpose:

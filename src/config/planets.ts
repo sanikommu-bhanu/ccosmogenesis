@@ -4,13 +4,13 @@
  * Sizes are compressed with a square-root law normalised to Earth = 1.0 scene unit.
  * A linear scale would make Mercury 0.19 px next to Jupiter; a pure log scale
  * flattens Jupiter into "slightly bigger than Earth". The square root keeps the
- * ordering and the felt drama of the gas giants (Jupiter reads 3.3× Earth instead of
- * its true 11×) while leaving the rocky planets legible in the same frame.
+ * ordering and the felt drama of the gas giants (Jupiter reads 3.3x Earth instead of
+ * its true 11x) while leaving the rocky planets legible in the same frame.
  *
  * Rotation is expressed as a signed sidereal period and applied inside the tilted
  * frame, so retrograde bodies fall out of the physics rather than being special-cased:
- * Venus (177.4° obliquity) and Uranus (97.8°) end up spinning backwards on screen
- * exactly as they do in reality.
+ * Venus (177.4 degrees obliquity) and Uranus (97.8) end up spinning backwards on
+ * screen exactly as they do in reality.
  */
 
 export type PlanetId =
@@ -26,7 +26,7 @@ export type PlanetId =
 export interface Fact {
   /** Mono label, shown uppercase in the HUD. */
   label: string
-  /** The value itself — kept short enough to sit on one leader line. */
+  /** The value itself, kept short enough to sit on one leader line. */
   value: string
 }
 
@@ -75,7 +75,7 @@ export interface AtmosphereDef {
   color: string
   /** Forward-scatter colour seen against the terminator. */
   sunset: string
-  /** Rim falloff exponent — higher is a tighter, thinner-looking atmosphere. */
+  /** Rim falloff exponent; higher is a tighter, thinner-looking atmosphere. */
   power: number
   intensity: number
 }
@@ -89,13 +89,13 @@ export interface Planet {
   radius: number
   /** Scene units from the Sun, log-compressed for layout. */
   orbitRadius: number
-  /** Degrees. Values above 90° are physically retrograde. */
+  /** Degrees. Values above 90 are physically retrograde. */
   axialTilt: number
   /** Sidereal rotation period in hours. Sign is informational; tilt carries direction. */
   rotationHours: number
   /** Seconds of screen time this planet gets, relative to the others. */
   weight: number
-  /** Sun-relative orbital phase in radians, so the system doesn't render as a line. */
+  /** Sun-relative orbital phase in radians. */
   phase: number
   /** Base colour used for atmosphere maths and as the loading placeholder. */
   color: string
@@ -121,16 +121,45 @@ export interface Planet {
 const R_EARTH_KM = 6371
 export const sizeOf = (radiusKm: number) => Math.sqrt(radiusKm) / Math.sqrt(R_EARTH_KM)
 
-/** Log-compressed orbital layout. */
+/**
+ * Log-compressed orbital layout.
+ *
+ * The exponent is chosen so the *character* of the spacing survives compression:
+ * Mercury through Mars stay visibly bunched together while Jupiter through Neptune
+ * spread out, which is the most striking fact about the Solar System's geometry.
+ * A linear scale would put the four rocky planets inside a single pixel; equal
+ * spacing would throw the fact away entirely.
+ */
 const orbitOf = (au: number) => 30 * Math.pow(au, 0.45)
+
+/**
+ * Orbital phases are a gentle fan rather than scattered.
+ *
+ * Real planets are never aligned, but the establishing shot needs to read as a family
+ * portrait: all eight legible at once, ordered outward. A ~36 degree fan keeps them
+ * from occluding one another and gives the row real depth, without collapsing into
+ * the flat diagram-like line a perfect alignment would produce.
+ */
+const phaseOf = (index: number) => index * 0.09
+
+/**
+ * How much planets are enlarged for the establishing shot.
+ *
+ * At true relative scale a planet is a sub-pixel speck beside its orbit, which is
+ * honest and unwatchable. Every orrery ever built exaggerates body size against
+ * orbital distance for exactly this reason. The boost is uniform, so planet sizes
+ * stay correct *relative to each other*; only the body-to-orbit ratio is exaggerated,
+ * and it eases back to 1 as the camera drops into the ring flythrough.
+ */
+export const ORRERY_SIZE_BOOST = 2.2
 
 /** The Sun, kept separate because it is a light source rather than a destination. */
 export const SUN = {
-  radius: sizeOf(696340), // ≈ 10.45 scene units
+  radius: sizeOf(696340), // about 10.45 scene units
   facts: [
     { label: 'DIAMETER', value: '1 392 700 km' },
-    { label: 'SURFACE', value: '5 505 °C' },
-    { label: 'CORE', value: '15 000 000 °C' },
+    { label: 'SURFACE', value: '5 505 C' },
+    { label: 'CORE', value: '15 000 000 C' },
     { label: 'MASS SHARE', value: '99.86%' },
   ] satisfies Fact[],
 }
@@ -145,17 +174,17 @@ export const PLANETS: Planet[] = [
     axialTilt: 0.034,
     rotationHours: 1407.6,
     weight: 0.95,
-    phase: 0.4,
+    phase: phaseOf(0),
     color: '#8c8279',
     maps: { albedo: '/textures/mercury/albedo.jpg' },
     moons: [],
     facts: [
       { label: 'DIAMETER', value: '4 879 km' },
       { label: 'SOLAR DAY', value: '176 Earth days' },
-      { label: 'SURFACE', value: '−173 → 427 °C' },
+      { label: 'SURFACE', value: '-173 to 427 C' },
     ],
     detail:
-      'Closest to the Sun and smaller than some moons. With almost no atmosphere to move heat around, the day side reaches 427 °C while the night side falls to −173 °C — the widest surface temperature swing of any planet. It rotates three times for every two orbits, so a single solar day lasts two Mercurian years.',
+      'Closest to the Sun and smaller than some moons. With almost no atmosphere to move heat around, the day side reaches 427 C while the night side falls to -173 C, the widest surface temperature swing of any planet. It rotates three times for every two orbits, so a single solar day lasts two Mercurian years.',
   },
   {
     id: 'venus',
@@ -163,10 +192,10 @@ export const PLANETS: Planet[] = [
     designation: 'SOL_II',
     radius: sizeOf(6051.8),
     orbitRadius: orbitOf(0.723),
-    axialTilt: 177.4, // >90° — the planet is effectively upside down, hence retrograde
+    axialTilt: 177.4, // above 90: the planet is effectively upside down, hence retrograde
     rotationHours: -5832.5,
     weight: 1.0,
-    phase: 2.1,
+    phase: phaseOf(1),
     color: '#d8b98a',
     maps: {
       albedo: '/textures/venus/atmosphere.jpg',
@@ -182,11 +211,11 @@ export const PLANETS: Planet[] = [
     moons: [],
     facts: [
       { label: 'DIAMETER', value: '12 104 km' },
-      { label: 'SURFACE', value: '464 °C — hottest' },
+      { label: 'SURFACE', value: '464 C, hottest' },
       { label: 'SPIN', value: 'Retrograde, 243 days' },
     ],
     detail:
-      'Almost Earth’s twin in size, and nothing like it. A carbon dioxide atmosphere ninety times heavier than ours traps enough heat to melt lead at the surface — hotter than Mercury despite being twice as far from the Sun. It also turns backwards, and so slowly that its day is longer than its year.',
+      'Almost Earth’s twin in size, and nothing like it. A carbon dioxide atmosphere ninety times heavier than ours traps enough heat to melt lead at the surface, hotter than Mercury despite being twice as far from the Sun. It also turns backwards, and so slowly that its day is longer than its year.',
   },
   {
     id: 'earth',
@@ -197,7 +226,7 @@ export const PLANETS: Planet[] = [
     axialTilt: 23.44,
     rotationHours: 23.934,
     weight: 1.35,
-    phase: 4.0,
+    phase: phaseOf(2),
     color: '#2b5a8c',
     maps: {
       albedo: '/textures/earth/day.jpg',
@@ -230,7 +259,7 @@ export const PLANETS: Planet[] = [
       { label: 'SURFACE', value: '71% liquid water' },
     ],
     detail:
-      'The only place in the observed universe known to be inhabited. Its 23.4° tilt is what gives it seasons; its oversized Moon holds that tilt steady enough for climate to stay liveable over geological time. The night side is the only planetary surface here lit from below, by us.',
+      'The only place in the observed universe known to be inhabited. Its 23.4 degree tilt is what gives it seasons; its oversized Moon holds that tilt steady enough for climate to stay liveable over geological time. The night side is the only planetary surface here lit from below, by us.',
   },
   {
     id: 'mars',
@@ -241,13 +270,13 @@ export const PLANETS: Planet[] = [
     axialTilt: 25.19,
     rotationHours: 24.623,
     weight: 1.05,
-    phase: 5.5,
+    phase: phaseOf(3),
     color: '#b5613a',
     maps: { albedo: '/textures/mars/albedo.jpg' },
     atmosphere: {
       thickness: 0.018,
       color: '#e8a06a',
-      sunset: '#7fa8d8', // Martian sunsets really are blue — Rayleigh runs backwards in dust
+      sunset: '#7fa8d8', // Martian sunsets really are blue: scattering runs backwards in dust
       power: 4.0,
       intensity: 0.45,
     },
@@ -278,7 +307,7 @@ export const PLANETS: Planet[] = [
       { label: 'OLYMPUS MONS', value: '21.9 km tall' },
     ],
     detail:
-      'Half Earth’s width, with a day only forty minutes longer. Olympus Mons rises 21.9 km — nearly three times Everest — because Mars has no drifting plates to move a volcano off its hotspot. Its two moons are almost certainly captured asteroids; Phobos is spiralling in and will break up into a ring.',
+      'Half Earth’s width, with a day only forty minutes longer. Olympus Mons rises 21.9 km, nearly three times Everest, because Mars has no drifting plates to move a volcano off its hotspot. Its two moons are almost certainly captured asteroids; Phobos is spiralling in and will break up into a ring.',
   },
   {
     id: 'jupiter',
@@ -289,7 +318,7 @@ export const PLANETS: Planet[] = [
     axialTilt: 3.13,
     rotationHours: 9.925,
     weight: 1.3,
-    phase: 0.9,
+    phase: phaseOf(4),
     color: '#c9a882',
     maps: { albedo: '/textures/jupiter/albedo.jpg' },
     atmosphere: {
@@ -349,7 +378,7 @@ export const PLANETS: Planet[] = [
     ],
     facts: [
       { label: 'DIAMETER', value: '139 820 km' },
-      { label: 'DAY', value: '9 h 56 m — fastest' },
+      { label: 'DAY', value: '9 h 56 m, fastest' },
       { label: 'GREAT RED SPOT', value: 'Storm wider than Earth' },
     ],
     detail:
@@ -364,7 +393,7 @@ export const PLANETS: Planet[] = [
     axialTilt: 26.73,
     rotationHours: 10.656,
     weight: 1.35,
-    phase: 3.3,
+    phase: phaseOf(5),
     color: '#d9c08a',
     maps: { albedo: '/textures/saturn/albedo.jpg' },
     atmosphere: {
@@ -395,11 +424,11 @@ export const PLANETS: Planet[] = [
     ],
     facts: [
       { label: 'DIAMETER', value: '116 460 km' },
-      { label: 'RINGS', value: '282 000 km wide, ~10 m thick' },
-      { label: 'DENSITY', value: '0.69 g/cm³ — floats' },
+      { label: 'RINGS', value: '282 000 km wide, 10 m thick' },
+      { label: 'DENSITY', value: '0.69 g/cm3, would float' },
     ],
     detail:
-      'Less dense than water, and by some margin — drop Saturn in a large enough ocean and it would float. The rings span most of the distance from Earth to the Moon but are only about ten metres thick, which is why they vanish entirely when seen edge-on. Titan is the only moon in the Solar System with a thick atmosphere.',
+      'Less dense than water, and by some margin: drop Saturn in a large enough ocean and it would float. The rings span most of the distance from Earth to the Moon but are only about ten metres thick, which is why they vanish entirely when seen edge-on. Titan is the only moon in the Solar System with a thick atmosphere.',
   },
   {
     id: 'uranus',
@@ -407,10 +436,10 @@ export const PLANETS: Planet[] = [
     designation: 'SOL_VII',
     radius: sizeOf(25362),
     orbitRadius: orbitOf(19.19),
-    axialTilt: 97.77, // knocked over — poles face the Sun in turn
+    axialTilt: 97.77, // knocked over; the poles face the Sun in turn
     rotationHours: -17.24,
     weight: 1.0,
-    phase: 5.9,
+    phase: phaseOf(6),
     color: '#a8d8dd',
     maps: { albedo: '/textures/uranus/albedo.jpg' },
     atmosphere: {
@@ -431,8 +460,8 @@ export const PLANETS: Planet[] = [
     moons: [],
     facts: [
       { label: 'DIAMETER', value: '50 724 km' },
-      { label: 'AXIAL TILT', value: '97.8° — on its side' },
-      { label: 'ATMOSPHERE', value: '−224 °C, coldest' },
+      { label: 'AXIAL TILT', value: '97.8 deg, on its side' },
+      { label: 'ATMOSPHERE', value: '-224 C, coldest' },
     ],
     detail:
       'Tipped over onto its side, almost certainly by an ancient collision, so it rolls along its orbit rather than spinning upright. Each pole spends 42 years in continuous sunlight and 42 in darkness. Despite being closer to the Sun than Neptune, it has the coldest atmosphere measured anywhere in the Solar System.',
@@ -446,7 +475,7 @@ export const PLANETS: Planet[] = [
     axialTilt: 28.32,
     rotationHours: 16.11,
     weight: 1.0,
-    phase: 1.7,
+    phase: phaseOf(7),
     color: '#3d5ef2',
     maps: { albedo: '/textures/neptune/albedo.jpg' },
     atmosphere: {
@@ -467,7 +496,7 @@ export const PLANETS: Planet[] = [
     moons: [],
     facts: [
       { label: 'DIAMETER', value: '49 244 km' },
-      { label: 'WINDS', value: '2 100 km/h — fastest' },
+      { label: 'WINDS', value: '2 100 km/h, fastest' },
       { label: 'DISTANCE', value: '4.5 billion km from Sun' },
     ],
     detail:
@@ -480,16 +509,35 @@ export const PLANET_BY_ID = Object.fromEntries(PLANETS.map((p) => [p.id, p])) as
   Planet
 >
 
+/**
+ * World position of a planet.
+ *
+ * Planets sit at fixed orbital phases rather than orbiting the Sun during the film.
+ * Orbital motion would mean the camera choreography had to chase a moving target, and
+ * at these compressed distances the movement would read as drift rather than as orbit
+ * anyway.
+ *
+ * Shared by the renderer and the camera rig so the two can never disagree about where
+ * a planet is.
+ */
+export function planetPosition(planet: Planet, out?: { x: number; y: number; z: number }) {
+  const target = out ?? { x: 0, y: 0, z: 0 }
+  target.x = Math.cos(planet.phase) * planet.orbitRadius
+  target.y = 0
+  target.z = Math.sin(planet.phase) * planet.orbitRadius
+  return target
+}
+
 export interface PlanetSegment {
   planet: Planet
-  /** Local progress within the 'planets' chapter at which this planet's beat starts. */
+  /** Local progress within the ring phase at which this planet's beat starts. */
   start: number
   end: number
 }
 
 /**
- * The eight planet beats, laid out inside chapter 7's slice of the timeline.
- * Each beat is: arrive → hold on an establishing orbit → whip-pan out.
+ * The eight planet beats, laid out inside the ring-exploration phase.
+ * Each beat is: arrive, fly a full orbital ring, break away to the next.
  */
 export const PLANET_SEGMENTS: PlanetSegment[] = (() => {
   const total = PLANETS.reduce((sum, p) => sum + p.weight, 0)
@@ -502,11 +550,41 @@ export const PLANET_SEGMENTS: PlanetSegment[] = (() => {
   })
 })()
 
-/** Local progress inside chapter 7 → which planet is on screen. */
+/** Local progress inside the ring phase to the planet on screen. */
 export function planetSegmentAt(local: number): PlanetSegment {
   const p = Math.min(0.999999, Math.max(0, local))
   for (const seg of PLANET_SEGMENTS) {
     if (p >= seg.start && p < seg.end) return seg
   }
   return PLANET_SEGMENTS[PLANET_SEGMENTS.length - 1]
+}
+
+/**
+ * The planets chapter is two movements, not one.
+ *
+ * The first slice is the orrery: a held establishing shot of the whole system, all
+ * eight worlds alive in frame at once. The rest is the ring exploration, a chain of
+ * orbital loops threaded from Mercury out to Neptune.
+ *
+ * Everything downstream derives from this constant, so the balance between "look at
+ * the system" and "visit the worlds" is a single number.
+ */
+export const ORRERY_FRACTION = 0.17
+
+/** Splits chapter-local progress into which movement we are in, and how far through it. */
+export function planetsPhase(chapterLocal: number): {
+  phase: 'orrery' | 'rings'
+  /** 0 to 1 within that movement. */
+  t: number
+  /** Eased 0 to 1 blend from orrery framing into ring framing. */
+  handover: number
+} {
+  if (chapterLocal < ORRERY_FRACTION) {
+    const t = chapterLocal / ORRERY_FRACTION
+    return { phase: 'orrery', t, handover: 0 }
+  }
+  const t = (chapterLocal - ORRERY_FRACTION) / (1 - ORRERY_FRACTION)
+  // The first stretch of the ring phase is still leaving the orrery behind.
+  const raw = Math.min(1, t / 0.06)
+  return { phase: 'rings', t, handover: raw * raw * (3 - 2 * raw) }
 }
